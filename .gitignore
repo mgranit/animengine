@@ -1,7 +1,6 @@
 .venv/
 archive/
 tutorials/
-notebooks/
 testing/
 __pycache__/
 frames/
