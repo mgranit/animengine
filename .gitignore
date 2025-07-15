@@ -5,3 +5,4 @@ testing/
 __pycache__/
 frames/
 output/
+*.mp4
