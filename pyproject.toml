@@ -1,0 +1,20 @@
+[project]
+name = "animengine"
+version = "0.1.0"
+description = "Physics-based OpenGL animation engine"
+authors = [
+    { name = "Mikael Granit" }
+]
+dependencies = [
+    "numpy",
+    "pygame",
+    "PyOpenGL",
+    "PyOpenGL_accelerate",
+    "matplotlib",
+    "Pillow",
+    "scipy"
+]
+
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
