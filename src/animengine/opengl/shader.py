@@ -33,14 +33,16 @@ class Shader:
             raise RuntimeError(f"Shader program linking failed:\n{info_log.decode()}")
         
         return program
+
+    def use(self):
+        gl.glUseProgram(self.program)
+    
+    def stop(self):
+        gl.glUseProgram(0)
     
     def __enter__(self):
-        gl.glUseProgram(self.program)
+        self.use()
         return self
     
     def __exit__(self, type_, value, traceback):
-        gl.glUseProgram(0)
-    
-    def __del__(self):
-        if hasattr(self, 'program') and self.program:
-            gl.glDeleteProgram(self.program)
+        self.stop()
