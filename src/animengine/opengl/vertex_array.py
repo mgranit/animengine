@@ -6,7 +6,6 @@ class VertexArray:
         self.id = gl.glGenVertexArrays(1)
     
     def add_attribute(self, buffer, index, size, dtype, stride=0, offset=0, normalized=False):
-        
         if buffer.target != gl.GL_ARRAY_BUFFER:
             raise ValueError("Buffer target must be GL_ARRAY_BUFFER to be used as vertex attribute")
         
@@ -20,6 +19,14 @@ class VertexArray:
                 c_void_p(offset)
             )
             gl.glEnableVertexAttribArray(index)
+    
+    def bind_element_buffer(self, buffer):
+        if buffer.target != gl.GL_ELEMENT_ARRAY_BUFFER:
+            raise ValueError("Buffer target must be GL_ELEMENT_ARRAY_BUFFER to be used as element buffer")
+        
+        with self:
+            buffer.bind()
+        buffer.unbind()
     
     def bind(self):
         gl.glBindVertexArray(self.id)
