@@ -2,6 +2,8 @@ import OpenGL.GL as gl
 import numpy as np
 
 class Shader:
+    _current_program = None
+    
     def __init__(self, vertex_str, fragment_str):
         
         vertex_shader = self._compile_shader(gl.GL_VERTEX_SHADER, vertex_str)
@@ -38,6 +40,8 @@ class Shader:
         return program
     
     def set_uniform(self, name, value):
+        if not self.is_active:
+            raise RuntimeError("Shader program must be active to set uniforms")
         
         loc = self.get_uniform_location(name)
         
@@ -45,22 +49,44 @@ class Shader:
         if value.ndim != 1 or value.shape[0] > 4:
             raise ValueError(f"Unsupported uniform value shape: {value.shape}")
         
+        func_map = {
+            np.floating: {
+                1: gl.glUniform1f,
+                2: gl.glUniform2f,
+                3: gl.glUniform3f,
+                4: gl.glUniform4f
+            },
+            np.signedinteger: {
+                1: gl.glUniform1i,
+                2: gl.glUniform2i,
+                3: gl.glUniform3i,
+                4: gl.glUniform4i
+            },
+            np.unsignedinteger: {
+                1: gl.glUniform1ui,
+                2: gl.glUniform2ui,
+                3: gl.glUniform3ui,
+                4: gl.glUniform4ui
+            }
+        }
+        
         if np.issubdtype(value.dtype, np.floating):
             value = value.astype(np.float32)
-            func = [gl.glUniform1f, gl.glUniform2f, gl.glUniform3f, gl.glUniform4f][value.shape[0] - 1]
+            func = func_map[np.floating][value.shape[0]]
         elif np.issubdtype(value.dtype, np.signedinteger):
             value = value.astype(np.int32)
-            func = [gl.glUniform1i, gl.glUniform2i, gl.glUniform3i, gl.glUniform4i][value.shape[0] - 1]
+            func = func_map[np.signedinteger][value.shape[0]]
         elif np.issubdtype(value.dtype, np.unsignedinteger):
             value = value.astype(np.uint32)
-            func = [gl.glUniform1ui, gl.glUniform2ui, gl.glUniform3ui, gl.glUniform4ui][value.shape[0] - 1]
+            func = func_map[np.unsignedinteger][value.shape[0]]
         else:
             raise TypeError(f"Unsupported uniform type: {value.dtype}")
         
-        with self:
-            func(loc, *value)
+        func(loc, *value)
     
     def set_uniform_array(self, name, value):
+        if not self.is_active:
+            raise RuntimeError("Shader program must be active to set uniforms")
         
         loc = self.get_uniform_location(name)
         
@@ -68,22 +94,44 @@ class Shader:
         if value.ndim != 2 or value.shape[1] > 4:
             raise ValueError(f"Unsupported uniform array shape: {value.shape}")
         
+        func_map = {
+            np.floating: {
+                1: gl.glUniform1fv,
+                2: gl.glUniform2fv,
+                3: gl.glUniform3fv,
+                4: gl.glUniform4fv
+            },
+            np.signedinteger: {
+                1: gl.glUniform1iv,
+                2: gl.glUniform2iv,
+                3: gl.glUniform3iv,
+                4: gl.glUniform4iv
+            },
+            np.unsignedinteger: {
+                1: gl.glUniform1uiv,
+                2: gl.glUniform2uiv,
+                3: gl.glUniform3uiv,
+                4: gl.glUniform4uiv
+            }
+        }
+        
         if np.issubdtype(value.dtype, np.floating):
             value = value.astype(np.float32)
-            func = [gl.glUniform1fv, gl.glUniform2fv, gl.glUniform3fv, gl.glUniform4fv][value.shape[1] - 1]
+            func = func_map[np.floating][value.shape[1]]
         elif np.issubdtype(value.dtype, np.signedinteger):
             value = value.astype(np.int32)
-            func = [gl.glUniform1iv, gl.glUniform2iv, gl.glUniform3iv, gl.glUniform4iv][value.shape[1] - 1]
+            func = func_map[np.signedinteger][value.shape[1]]
         elif np.issubdtype(value.dtype, np.unsignedinteger):
             value = value.astype(np.uint32)
-            func = [gl.glUniform1uiv, gl.glUniform2uiv, gl.glUniform3uiv, gl.glUniform4uiv][value.shape[1] - 1]
+            func = func_map[np.unsignedinteger][value.shape[1]]
         else:
             raise TypeError(f"Unsupported uniform array type: {value.dtype}")
         
-        with self:
-            func(loc, value.shape[0], value)
+        func(loc, value.shape[0], value)
     
     def set_uniform_matrix(self, name, value, transpose=False):
+        if not self.is_active:
+            raise RuntimeError("Shader program must be active to set uniforms")
         
         loc = self.get_uniform_location(name)
         
@@ -117,9 +165,7 @@ class Shader:
         else:
             raise TypeError(f"Unsupported uniform matrix type: {value.dtype}")
 
-        value = np.ascontiguousarray(value)
-        with self:
-            func(loc, value.shape[0], transpose, value)
+        func(loc, value.shape[0], transpose, value)
 
     def get_uniform_location(self, name):
         
@@ -133,13 +179,19 @@ class Shader:
 
     def use(self):
         gl.glUseProgram(self.program)
+        Shader._current_program = self.program
     
     def stop(self):
         gl.glUseProgram(0)
+        Shader._current_program = None
     
     def __enter__(self):
         self.use()
         return self
     
-    def __exit__(self, type_, value, traceback):
+    def __exit__(self, *args):
         self.stop()
+    
+    @property
+    def is_active(self):
+        return Shader._current_program == self.program
