@@ -38,10 +38,14 @@ class Window:
     
     def _framebuffer_size_callback(self, window: glfw._GLFWwindow, width: int, height: int) -> None:
         gl.glViewport(0, 0, width, height)
-    
+
     def _key_callback(self, window: glfw._GLFWwindow, key: int, scancode: int, action: int, mods: int) -> None:
         for callback in self.key_callbacks:
-            if callback["key"] == key and callback["action"] == action and callback["mods"] == mods:
+            if (
+                callback["key"] == key
+                and callback["action"] == action
+                and callback["mods"] == mods
+            ):
                 callback["callback"]()
     
     def add_key_callback(self, key: int, action: int, callback: Callable, mods: int = 0) -> None:
@@ -57,7 +61,10 @@ class Window:
     
     def set_should_close(self, value: bool) -> None:
         glfw.set_window_should_close(self._window, value)
-    
+
+    def is_key_down(self, key: int) -> bool:
+        return (glfw.get_key(self._window, key) == glfw.PRESS)
+        
     @property
     def resolution(self) -> tuple[int, int]:
         return glfw.get_window_size(self._window)
