@@ -6,7 +6,6 @@ import inspect
 import numpy as np
 
 import OpenGL.GL as GL
-from .openglutils import Shader, Uniform, TextureData, read_shader, compile_shader, initialize_program
 from .sound import SoundMixer
 from .usefuls import gaussian
 import shutil

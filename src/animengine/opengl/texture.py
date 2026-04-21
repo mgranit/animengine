@@ -7,7 +7,7 @@ class Texture:
         self.target = target
         self.id = gl.glGenTextures(1)
         
-        img = Image.open(path)
+        img = Image.open(path).transpose(Image.Transpose.FLIP_TOP_BOTTOM)
         img = img.convert("RGB")
         data = np.array(img, dtype=np.uint8)
         

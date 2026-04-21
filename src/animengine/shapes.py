@@ -6,6 +6,108 @@ def generate_random_rectangle_distribution(n, center, width, height):
     y = np.random.uniform(center[1] - height / 2, center[1] + height / 2, n)
     return np.vstack((x, y)).T
 
+def generate_rectangle_perimeter_distribution_uniform(n, center, width, height):
+    """
+    Generate n points uniformly spaced along the perimeter of a rectangle.
+    
+    Parameters:
+    - n: number of points
+    - center: (x, y) center of the rectangle
+    - width: width of the rectangle
+    - height: height of the rectangle
+    
+    Returns:
+    - numpy array of shape (n, 2) with point coordinates
+    """
+    # Calculate rectangle corners
+    x_min = center[0] - width / 2
+    x_max = center[0] + width / 2
+    y_min = center[1] - height / 2
+    y_max = center[1] + height / 2
+    
+    total_perimeter = 2 * (width + height)
+    spacing = total_perimeter / n
+    
+    points = []
+    
+    for i in range(n):
+        t = i * spacing
+        
+        if t < width:
+            # Top edge
+            x = x_min + t
+            y = y_max
+        elif t < width + height:
+            # Right edge
+            x = x_max
+            y = y_max - (t - width)
+        elif t < 2 * width + height:
+            # Bottom edge
+            x = x_max - (t - width - height)
+            y = y_min
+        else:
+            # Left edge
+            x = x_min
+            y = y_min + (t - 2 * width - height)
+        
+        points.append([x, y])
+    
+    return np.array(points)
+
+def generate_rectangle_perimeter_distribution(n, center, width, height):
+    """
+    Generate n random points uniformly distributed along the perimeter of a rectangle.
+    
+    Parameters:
+    - n: number of points
+    - center: (x, y) center of the rectangle
+    - width: width of the rectangle
+    - height: height of the rectangle
+    
+    Returns:
+    - numpy array of shape (n, 2) with point coordinates
+    """
+    # Calculate rectangle corners
+    x_min = center[0] - width / 2
+    x_max = center[0] + width / 2
+    y_min = center[1] - height / 2
+    y_max = center[1] + height / 2
+    
+    # Calculate perimeter segments
+    top = width
+    right = height
+    bottom = width
+    left = height
+    total_perimeter = 2 * (width + height)
+    
+    points = []
+    
+    # Generate n random points along the perimeter
+    for _ in range(n):
+        # Random position along perimeter (0 to total_perimeter)
+        t = np.random.uniform(0, total_perimeter)
+        
+        if t < top:
+            # Top edge
+            x = x_min + t
+            y = y_max
+        elif t < top + right:
+            # Right edge
+            x = x_max
+            y = y_max - (t - top)
+        elif t < top + right + bottom:
+            # Bottom edge
+            x = x_max - (t - top - right)
+            y = y_min
+        else:
+            # Left edge
+            x = x_min
+            y = y_min + (t - top - right - bottom)
+        
+        points.append([x, y])
+    
+    return np.array(points)
+
 def generate_grid_distribution(n, center, width, height):
     
     # Calculate optimal grid dimensions (as square as possible)
