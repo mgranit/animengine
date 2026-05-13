@@ -1,4 +1,3 @@
-# from .openglutils import Shader, Uniform, TextureData, read_shader
 from .window import Window
 from .shader import Shader
 from .buffer import Buffer
