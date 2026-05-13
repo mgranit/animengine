@@ -46,28 +46,20 @@ class Camera:
         glfw.set_cursor_pos_callback(window._window, self.look_around)
         glfw.set_scroll_callback(window._window, self.zoom)
     
-    def move_forward(self, cameraSpeed):
-        self.pos += cameraSpeed * self.front
-    
-    def move_backward(self, cameraSpeed):
-        self.pos -= cameraSpeed * self.front
-    
-    def move_left(self, cameraSpeed):
-        self.pos -= cameraSpeed * self.right
-    
-    def move_right(self, cameraSpeed):
-        self.pos += cameraSpeed * self.right
-    
     def handle_camera_movement(self, deltaTime):
         cameraSpeed = 2.5 * deltaTime
-        if self.window.is_key_down(glfw.KEY_W):
-            self.move_forward(cameraSpeed)
-        if self.window.is_key_down(glfw.KEY_S):
-            self.move_backward(cameraSpeed)
         if self.window.is_key_down(glfw.KEY_A):
-            self.move_left(cameraSpeed)
+            self.pos -= cameraSpeed * self.right
         if self.window.is_key_down(glfw.KEY_D):
-            self.move_right(cameraSpeed)
+            self.pos += cameraSpeed * self.right
+        if self.window.is_key_down(glfw.KEY_W):
+            self.pos += cameraSpeed * self.front
+        if self.window.is_key_down(glfw.KEY_S):
+            self.pos -= cameraSpeed * self.front
+        if self.window.is_key_down(glfw.KEY_SPACE):
+            self.pos += cameraSpeed * self.up
+        if self.window.is_key_down(glfw.KEY_LEFT_CONTROL):
+            self.pos -= cameraSpeed * self.up
         
         self.calculate_view_matrix()
     
