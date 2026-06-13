@@ -32,5 +32,5 @@ class Buffer:
         self.bind()
         return self
     
-    def __exit__(self, type_, value, traceback):
+    def __exit__(self, *_):
         self.unbind()

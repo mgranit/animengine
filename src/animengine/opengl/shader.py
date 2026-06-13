@@ -189,7 +189,7 @@ class Shader:
         self.use()
         return self
     
-    def __exit__(self, *args):
+    def __exit__(self, *_):
         self.stop()
     
     @property
