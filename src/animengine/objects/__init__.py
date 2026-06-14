@@ -1,4 +1,4 @@
 from .coordaxes import CoordinateAxes
-from .cube import Cube
+from .cube import Cube, TexturedCube
 
-__all__ = ["CoordinateAxes", "Cube"]
+__all__ = ["CoordinateAxes", "Cube", "TexturedCube"]
