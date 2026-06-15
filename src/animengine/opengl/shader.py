@@ -129,7 +129,7 @@ class Shader:
         
         func(loc, value.shape[0], value)
     
-    def set_uniform_matrix(self, name, value, transpose=False):
+    def set_uniform_matrix(self, name, value, transpose=True):
         if not self.is_active:
             raise RuntimeError("Shader program must be active to set uniforms")
         

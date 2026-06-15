@@ -19,14 +19,17 @@ def get_perspective_projection_matrix(fov_deg, aspect_ratio, near_plane, far_pla
 
 class Camera:
     
-    def __init__(self, window: Window):
+    def __init__(self, window: Window, pos: np.ndarray | None = None):
         
         self.window = window
         self.width = window.width
         self.height = window.height
         self.aspect_ratio = self.width / self.height
         
-        self.pos = np.array([3.0, 3.0, 3.0])
+        if pos is None:
+            self.pos = np.array([3.0, 3.0, 3.0])
+        else:
+            self.pos = pos
         
         self.front = np.array([-1.0, -1.0, -1.0])
         self.build_system(self.front)
