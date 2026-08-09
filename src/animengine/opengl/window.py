@@ -12,7 +12,9 @@ class Window:
         title: str = "Window",
         version_major: int = 3,
         version_minor: int = 3,
-        profile: int = glfw.OPENGL_CORE_PROFILE
+        samples: int = 1,
+        profile: int = glfw.OPENGL_CORE_PROFILE,
+        disable_cursor: bool = False
         ) -> None:
         
         if not Window._glfw_initialized:
@@ -23,6 +25,7 @@ class Window:
         glfw.window_hint(glfw.CONTEXT_VERSION_MAJOR, version_major)
         glfw.window_hint(glfw.CONTEXT_VERSION_MINOR, version_minor)
         glfw.window_hint(glfw.OPENGL_PROFILE, profile)
+        glfw.window_hint(glfw.SAMPLES, samples)
         
         self._window = glfw.create_window(width, height, title, None, None)
         if not self._window:
@@ -33,6 +36,9 @@ class Window:
         glfw.set_framebuffer_size_callback(self._window, self._framebuffer_size_callback)
         glfw.set_key_callback(self._window, self._key_callback)
         gl.glViewport(0, 0, width, height)
+        
+        if disable_cursor:
+            glfw.set_input_mode(self._window, glfw.CURSOR, glfw.CURSOR_DISABLED)
         
         self.key_callbacks = []
     

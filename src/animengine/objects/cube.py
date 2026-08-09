@@ -1,7 +1,7 @@
 import numpy as np
 import OpenGL.GL as gl
 
-from animengine.opengl import Shader, VertexArray, Buffer, Texture
+from animengine.opengl import Shader, VertexArray, Buffer, Texture2D
 from animengine.camera import Camera
 from animengine.transformations import get_translation_matrix, get_scaling_matrix
 
@@ -221,7 +221,7 @@ class TexturedCube:
         
         self.model_matrix = T @ S
         
-        self.texture = Texture(texture_path)
+        self.texture = Texture2D(texture_path)
     
     def render(self, camera: Camera) -> None:
         shader = self.__class__.shader

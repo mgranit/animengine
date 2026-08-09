@@ -54,6 +54,7 @@ def get_rotation_matrix(angle_deg, axis, hg=False, dtype: Type[np.floating] = np
     angle_rad = np.deg2rad(angle_deg)
     cos = np.cos(angle_rad)
     sin = np.sin(angle_rad)
+    axis /= np.linalg.norm(axis)  # Normalize axis for Rodrigues' formula
     x, y, z = axis
     if hg:
         return np.array([
