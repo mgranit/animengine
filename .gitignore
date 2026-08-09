@@ -6,3 +6,4 @@ frames/
 output/
 *.mp4
 recordings/
+*.egg-info/
