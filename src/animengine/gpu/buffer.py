@@ -1,5 +1,6 @@
 import OpenGL.GL as gl
 
+
 class Buffer:
     def __init__(self, target, data=None, usage=gl.GL_STATIC_DRAW):
         

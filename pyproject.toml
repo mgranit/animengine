@@ -1,20 +1,44 @@
 [project]
 name = "animengine"
 version = "0.1.0"
-description = "Physics-based OpenGL animation engine"
+description = "OpenGL engine for creating 2D and 3D animations offline"
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
 authors = [
     { name = "Mikael Granit" }
 ]
 dependencies = [
     "numpy",
-    "pygame",
+    "glfw",
     "PyOpenGL",
-    "PyOpenGL_accelerate",
-    "matplotlib",
     "Pillow",
-    "scipy"
+    "imageio-ffmpeg",
 ]
 
+[project.optional-dependencies]
+speed = ["PyOpenGL_accelerate"]
+dev = ["pytest", "ruff"]
+
 [build-system]
-requires = ["setuptools"]
+requires = ["setuptools>=64"]
 build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+animengine = ["render/shaders/*.vert", "render/shaders/*.frag"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+markers = [
+    "gl: needs an OpenGL context (skipped when one cannot be created)",
+]
+
+[tool.ruff]
+line-length = 100
+src = ["src", "tests", "examples"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]

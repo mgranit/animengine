@@ -22,7 +22,9 @@ class VertexArray:
     
     def bind_element_buffer(self, buffer):
         if buffer.target != gl.GL_ELEMENT_ARRAY_BUFFER:
-            raise ValueError("Buffer target must be GL_ELEMENT_ARRAY_BUFFER to be used as element buffer")
+            raise ValueError(
+                "Buffer target must be GL_ELEMENT_ARRAY_BUFFER to be used as element buffer"
+            )
         
         with self:
             buffer.bind()

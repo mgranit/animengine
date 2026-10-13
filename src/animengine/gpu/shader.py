@@ -1,8 +1,13 @@
-import OpenGL.GL as gl
+from pathlib import Path
+
 import numpy as np
+import OpenGL.GL as gl
+
 
 class Shader:
-    _current_program = None
+    @classmethod
+    def from_files(cls, vertex_path, fragment_path):
+        return cls(Path(vertex_path).read_text(), Path(fragment_path).read_text())
     
     def __init__(self, vertex_str, fragment_str):
         
@@ -14,7 +19,7 @@ class Shader:
         
         self._uniform_locs = {}
         
-        self.shaders = []
+        self._textures = []
     
     def _compile_shader(self, shader_type, source):
         
@@ -47,7 +52,7 @@ class Shader:
         
         loc = self.get_uniform_location(name)
         
-        value = np.ascontiguousarray(value)
+        value = np.atleast_1d(np.ascontiguousarray(value))
         if value.ndim != 1 or value.shape[0] > 4:
             raise ValueError(f"Unsupported uniform value shape: {value.shape}")
         
@@ -181,11 +186,9 @@ class Shader:
 
     def use(self):
         gl.glUseProgram(self.program)
-        Shader._current_program = self.program
     
     def stop(self):
         gl.glUseProgram(0)
-        Shader._current_program = None
     
     def __enter__(self):
         self.use()
@@ -198,19 +201,19 @@ class Shader:
     
     @property
     def is_active(self):
-        return Shader._current_program == self.program
+        return gl.glGetIntegerv(gl.GL_CURRENT_PROGRAM) == self.program
     
     def add_texture(self, name, texture, unit):
         with self:
             self.set_uniform(name, unit)
-        self.shaders.append((texture, unit))
+        self._textures.append((texture, unit))
     
     def activate_textures(self):
-        for texture, unit in self.shaders:
+        for texture, unit in self._textures:
             gl.glActiveTexture(gl.GL_TEXTURE0 + unit)
             gl.glBindTexture(gl.GL_TEXTURE_2D, texture.id)
     
     def deactivate_textures(self):
-        for texture, unit in self.shaders:
+        for _, unit in self._textures:
             gl.glActiveTexture(gl.GL_TEXTURE0 + unit)
             gl.glBindTexture(gl.GL_TEXTURE_2D, 0)
