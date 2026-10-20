@@ -1,9 +1,12 @@
 import glfw
 import numpy as np
 
+from animengine.linalg import Frame
 from animengine.platform import Input
 
 from .camera import PerspectiveCamera
+
+WORLD_UP = np.array([0.0, 0.0, 1.0])
 
 
 class FlyController:
@@ -21,8 +24,7 @@ class FlyController:
         self.speed = speed
         self.sensitivity = sensitivity
 
-        front = camera.target - camera.position
-        front /= np.linalg.norm(front)
+        front = -camera.frame.z_axis
         self.polar = float(np.degrees(np.arcsin(front[2])))
         self.azimuth = float(np.degrees(np.arctan2(front[1], front[0])))
 
@@ -51,11 +53,8 @@ class FlyController:
         self.camera.fov = float(np.clip(self.camera.fov - dy, 15.0, 45.0))
 
     def update(self, dt: float) -> None:
-        front = self._front()
-        world_up = np.array([0.0, 0.0, 1.0])
-        up = world_up - np.dot(world_up, front) * front
-        up /= np.linalg.norm(up)
-        right = np.cross(front, up)
+        frame = Frame.look_at(self.camera.position, self.camera.position + self._front(), WORLD_UP)
+        front, right, up = -frame.z_axis, frame.x_axis, frame.y_axis
 
         step = self.speed * dt
         move = np.zeros(3)
@@ -72,5 +71,4 @@ class FlyController:
         if self.input.is_key_down(glfw.KEY_LEFT_CONTROL):
             move -= up
 
-        self.camera.position = self.camera.position + step * move
-        self.camera.target = self.camera.position + front
+        self.camera.frame = Frame(frame.origin + step * move, frame.basis)

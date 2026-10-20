@@ -37,6 +37,17 @@ def test_look_at_moves_eye_to_origin_and_target_to_negative_z():
     assert np.allclose(apply(view, [0, 0, 0]), [0, 0, -5])
 
 
+def test_look_at_with_up_parallel_to_view_direction_is_finite():
+    view = look_at([0, 0, 5], [0, 0, 0], [0, 0, 1])
+    assert np.all(np.isfinite(view))
+    assert np.allclose(apply(view, [0, 0, 0]), [0, 0, -5])
+
+
+def test_look_at_rejects_coincident_eye_and_target():
+    with pytest.raises(ValueError):
+        look_at([1, 2, 3], [1, 2, 3], [0, 0, 1])
+
+
 def test_perspective_maps_near_and_far_to_ndc_limits():
     proj = perspective(60, 1.5, 0.1, 50.0, dtype=np.float64)
     near = proj @ [0, 0, -0.1, 1]

@@ -1,3 +1,4 @@
+from .frame import Frame
 from .projection import look_at, orthographic, perspective
 from .transforms import (
     get_rotation_matrix,
@@ -9,6 +10,7 @@ from .transforms import (
 )
 
 __all__ = [
+    "Frame",
     "get_rotation_matrix",
     "get_rotation_matrix_x",
     "get_rotation_matrix_y",

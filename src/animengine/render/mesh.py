@@ -34,11 +34,9 @@ class Mesh:
         if self.colors is not None:
             self.set_colors(self.colors)
         if self.uvs is not None:
-            self.uvs = self._check("uvs", self.uvs, (2,))
-            self._touch("uvs")
+            self.set_uvs(self.uvs)
         if self.indices is not None:
-            self.indices = np.ascontiguousarray(self.indices, dtype=np.uint32).ravel()
-            self._touch("indices")
+            self.set_indices(self.indices)
 
     def _touch(self, name: str) -> None:
         self._versions[name] = self._versions.get(name, 0) + 1
@@ -58,6 +56,14 @@ class Mesh:
     def set_colors(self, colors) -> None:
         self.colors = self._check("colors", colors, (3,))
         self._touch("colors")
+
+    def set_uvs(self, uvs) -> None:
+        self.uvs = self._check("uvs", uvs, (2,))
+        self._touch("uvs")
+
+    def set_indices(self, indices) -> None:
+        self.indices = np.ascontiguousarray(indices, dtype=np.uint32).ravel()
+        self._touch("indices")
 
     @property
     def vertex_count(self) -> int:

@@ -36,7 +36,7 @@ Each layer imports only from the layers above it in this list.
 
 | Package | Responsibility |
 |---|---|
-| `animengine.linalg` | Transform, view and projection matrices |
+| `animengine.linalg` | `Frame` (origin + orthonormal basis), transform, view and projection matrices |
 | `animengine.platform` | GLFW window, input events, clocks |
 | `animengine.gpu` | Thin OpenGL wrappers: buffers, shaders, textures, framebuffers |
 | `animengine.render` | Cameras, meshes, materials, the `Renderer` (GLSL lives in `render/shaders`) |
