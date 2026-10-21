@@ -14,11 +14,11 @@ def perspective(fov_deg: float, aspect: float, near: float, far: float,
     ], dtype=dtype)
 
 
-def orthographic(left: float, right: float, bottom: float, top: float,
-                 near: float, far: float, dtype=np.float32) -> np.ndarray:
+def orthographic(width: float, height: float, near: float, far: float,
+                 dtype=np.float32) -> np.ndarray:
     return np.array([
-        [2.0 / (right - left), 0.0, 0.0, -(right + left) / (right - left)],
-        [0.0, 2.0 / (top - bottom), 0.0, -(top + bottom) / (top - bottom)],
+        [2.0 / width, 0.0, 0.0, 0.0],
+        [0.0, 2.0 / height, 0.0, 0.0],
         [0.0, 0.0, -2.0 / (far - near), -(far + near) / (far - near)],
         [0.0, 0.0, 0.0, 1.0],
     ], dtype=dtype)

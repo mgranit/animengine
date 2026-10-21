@@ -57,6 +57,6 @@ def test_perspective_maps_near_and_far_to_ndc_limits():
 
 
 def test_orthographic_maps_box_corners_to_ndc_corners():
-    proj = orthographic(-2, 2, -1, 1, 0.1, 10, dtype=np.float64)
+    proj = orthographic(4, 2, 0.1, 10, dtype=np.float64)
     assert np.allclose(apply(proj, [2, 1, -0.1]), [1, 1, -1])
     assert np.allclose(apply(proj, [-2, -1, -10]), [-1, -1, 1])

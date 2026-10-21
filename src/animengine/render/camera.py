@@ -110,6 +110,6 @@ class OrthographicCamera(Camera):
         self.far = far
 
     def projection_matrix(self, aspect: float) -> np.ndarray:
-        half_h = self.height / 2.0
-        half_w = half_h * aspect
-        return orthographic(-half_w, half_w, -half_h, half_h, self.near, self.far)
+        height = self.height
+        width = height * aspect
+        return orthographic(width, height, self.near, self.far)
