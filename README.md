@@ -10,7 +10,10 @@ played in a window in real time for development.
 import numpy as np
 from animengine import Lines, OrthographicCamera, Scene, preview, render_video
 
-scene = Scene(size=(1280, 720), camera=OrthographicCamera(height=2.0))
+scene = Scene(
+    size=(1280, 720),
+    camera=OrthographicCamera(width=16 / 9 * 2.0, height=2.0),
+)
 line = scene.add(Lines(color="#ffcc00"))
 
 def update(t, dt):
@@ -20,6 +23,10 @@ def update(t, dt):
 render_video(scene, update, duration=5, fps=60, out="output/spin.mp4")
 # preview(scene, update)
 ```
+
+An orthographic camera with both `width` and `height` set keeps fixed view bounds. If the output
+aspect ratio differs, the view is centered without stretching and the remaining bars use the
+scene background color by default; set `Scene(bar_color=...)` to choose another bar color.
 
 ## Install
 

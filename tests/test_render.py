@@ -23,6 +23,28 @@ def test_background_fills_frame():
     assert np.all(frame == [255, 0, 0])
 
 
+def test_fixed_orthographic_camera_fits_viewport_with_bar_color():
+    scene = Scene(
+        size=(80, 40),
+        background="#00ff00",
+        bar_color="#ff0000",
+        camera=OrthographicCamera(width=2.0, height=2.0),
+    )
+    frame = render_frame(scene, samples=0)
+    assert np.all(frame[20, 0] == [255, 0, 0])
+    assert np.all(frame[20, 20] == [0, 255, 0])
+
+
+def test_fixed_orthographic_camera_defaults_bar_color_to_background():
+    scene = Scene(
+        size=(80, 40),
+        background="#123456",
+        camera=OrthographicCamera(width=2.0, height=2.0),
+    )
+    frame = render_frame(scene, samples=0)
+    assert np.all(frame == [0x12, 0x34, 0x56])
+
+
 def test_cube_is_drawn_at_screen_center():
     scene = Scene(size=(64, 64))
     scene.add(Cube())

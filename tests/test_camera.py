@@ -81,7 +81,10 @@ def test_perspective_camera_puts_target_at_screen_center():
     assert np.allclose(to_ndc(camera, 16 / 9, [1, 0, 0])[:2], [0, 0], atol=1e-6)
 
 
-def test_orthographic_camera_visible_height_and_aspect():
-    camera = OrthographicCamera(height=4.0)
+def test_fixed_orthographic_camera_keeps_projection_and_fits_viewport():
+    camera = OrthographicCamera(width=8.0, height=4.0)
+    assert np.allclose(camera.projection_matrix(1.0), camera.projection_matrix(2.0))
     assert np.allclose(to_ndc(camera, 2.0, [4.0, 2.0, 0.0])[:2], [1, 1], atol=1e-6)
     assert np.allclose(to_ndc(camera, 2.0, [-4.0, -2.0, 0.0])[:2], [-1, -1], atol=1e-6)
+    assert camera.viewport_rect((100, 100)) == (0, 25, 100, 50)
+    assert camera.viewport_rect((300, 100)) == (50, 0, 200, 100)

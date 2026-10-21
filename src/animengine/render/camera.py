@@ -67,6 +67,10 @@ class Camera:
     def view_matrix(self) -> np.ndarray:
         return self.world_frame.inverse_matrix(np.float32)
 
+    def viewport_rect(self, size: tuple[int, int]) -> tuple[int, int, int, int]:
+        width, height = size
+        return 0, 0, width, height
+
     def projection_matrix(self, aspect: float) -> np.ndarray:
         raise NotImplementedError
 
@@ -93,10 +97,11 @@ class PerspectiveCamera(Camera):
 
 
 class OrthographicCamera(Camera):
-    """2D camera looking down -z; `height` is the visible world height."""
+    """2D camera looking down -z with fixed view bounds fitted without stretching."""
 
     def __init__(
         self,
+        width: float = 2.0,
         height: float = 2.0,
         position=(0.0, 0.0, 1.0),
         target=(0.0, 0.0, 0.0),
@@ -105,11 +110,28 @@ class OrthographicCamera(Camera):
         far: float = 2.0,
     ) -> None:
         super().__init__(position, target, up)
+        if width <= 0.0 or height <= 0.0:
+            raise ValueError("orthographic width and height must be positive")
+        self.width = width
         self.height = height
         self.near = near
         self.far = far
 
+    def viewport_rect(self, size: tuple[int, int]) -> tuple[int, int, int, int]:
+        output_width, output_height = size
+        view_aspect = self.width / self.height
+        output_aspect = output_width / output_height
+        if output_aspect > view_aspect:
+            viewport_height = output_height
+            viewport_width = max(1, round(viewport_height * view_aspect))
+            x = (output_width - viewport_width) // 2
+            y = 0
+        else:
+            viewport_width = output_width
+            viewport_height = max(1, round(viewport_width / view_aspect))
+            x = 0
+            y = (output_height - viewport_height) // 2
+        return x, y, viewport_width, viewport_height
+
     def projection_matrix(self, aspect: float) -> np.ndarray:
-        height = self.height
-        width = height * aspect
-        return orthographic(width, height, self.near, self.far)
+        return orthographic(self.width, self.height, self.near, self.far)

@@ -105,6 +105,7 @@ class Renderer:
         camera: Camera,
         *,
         background="#000000",
+        bar_color=None,
         target: Framebuffer | None = None,
         size: tuple[int, int] | None = None,
     ) -> None:
@@ -116,18 +117,32 @@ class Renderer:
                 raise ValueError("size is required when rendering to the default framebuffer")
             width, height = size
             gl.glBindFramebuffer(gl.GL_FRAMEBUFFER, 0)
-            gl.glViewport(0, 0, width, height)
 
+        x, y, viewport_width, viewport_height = camera.viewport_rect((width, height))
         gl.glEnable(gl.GL_DEPTH_TEST)
         gl.glDepthFunc(gl.GL_LEQUAL)
         gl.glEnable(gl.GL_BLEND)
         gl.glBlendFunc(gl.GL_SRC_ALPHA, gl.GL_ONE_MINUS_SRC_ALPHA)
         gl.glEnable(gl.GL_PROGRAM_POINT_SIZE)
 
-        gl.glClearColor(*to_rgba(background))
+        has_bars = (x, y, viewport_width, viewport_height) != (0, 0, width, height)
+        clear_color = bar_color if has_bars and bar_color is not None else background
+        gl.glDisable(gl.GL_SCISSOR_TEST)
+        gl.glViewport(0, 0, width, height)
+        gl.glClearColor(*to_rgba(clear_color))
         gl.glClear(gl.GL_COLOR_BUFFER_BIT | gl.GL_DEPTH_BUFFER_BIT)  # type: ignore
 
-        projection_view = camera.projection_matrix(width / height) @ camera.view_matrix
+        if has_bars:
+            gl.glEnable(gl.GL_SCISSOR_TEST)
+            gl.glScissor(x, y, viewport_width, viewport_height)
+            gl.glClearColor(*to_rgba(background))
+            gl.glClear(gl.GL_COLOR_BUFFER_BIT | gl.GL_DEPTH_BUFFER_BIT)  # type: ignore
+            gl.glDisable(gl.GL_SCISSOR_TEST)
+
+        gl.glViewport(x, y, viewport_width, viewport_height)
+        projection_view = camera.projection_matrix(
+            viewport_width / viewport_height
+        ) @ camera.view_matrix
         for item in items:
             self._draw(item, projection_view)
 

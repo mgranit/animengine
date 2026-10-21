@@ -11,9 +11,11 @@ class Scene:
         size: tuple[int, int] = (1280, 720),
         background="#000000",
         camera: Camera | None = None,
+        bar_color=None,
     ) -> None:
         self.size = size
         self.background = background
+        self.bar_color = bar_color
         self.camera = camera if camera is not None else PerspectiveCamera()
         self.root = Node()
 
@@ -34,6 +36,7 @@ class Scene:
             self.root.draw_items(),
             self.camera,
             background=self.background,
+            bar_color=self.bar_color,
             target=target,
             size=size,
         )
