@@ -6,17 +6,20 @@ from animengine.linalg import Frame, orthographic, perspective
 class Camera:
     """Pose and projection only; input handling lives in controllers.
 
-    The pose is a `Frame` that looks down its local -z with +y up. `position`, `target` and `up`
-    are a look-at view of it: setting `position` or `target` re-aims the camera at the other,
-    using `up` as the up hint. `target` is a point `look_distance` in front of the camera.
+    The pose is a `Frame` that looks down its local -z with +y up. `position`, `target` and
+    `world_up` are a look-at view of it: setting `position` or `target` re-aims the camera at the
+    other, keeping the view level relative to `world_up`. `world_up` is a fixed reference
+    direction, not the camera's own up (that is `frame.y_axis`, which tilts as the camera
+    pitches). `target` is a point `look_distance` in front of the camera.
 
     Set `parent` to a scene node (anything with a `world_frame`) to mount the camera on it. The
-    pose is then expressed in that node's frame, and the view follows the node as it moves.
+    pose is then expressed in that node's frame, and `world_up` is expressed in that frame too.
+    The view follows the node as it moves.
     """
 
-    def __init__(self, position, target, up) -> None:
-        self._up = np.array(up, dtype=np.float64)
-        self._frame = Frame.look_at(position, target, self._up)
+    def __init__(self, position, target, world_up) -> None:
+        self._world_up = np.array(world_up, dtype=np.float64)
+        self._frame = Frame.look_at(position, target, self._world_up)
         self._look_distance = float(np.linalg.norm(np.subtract(target, position)))
         self.parent = None
 
@@ -51,16 +54,16 @@ class Camera:
         self._aim(self.position, value)
 
     @property
-    def up(self) -> np.ndarray:
-        return self._up
+    def world_up(self) -> np.ndarray:
+        return self._world_up
 
-    @up.setter
-    def up(self, value) -> None:
-        self._up = np.array(value, dtype=np.float64)
+    @world_up.setter
+    def world_up(self, value) -> None:
+        self._world_up = np.array(value, dtype=np.float64)
         self._aim(self.position, self.target)
 
     def _aim(self, position, target) -> None:
-        self._frame = Frame.look_at(position, target, self._up)
+        self._frame = Frame.look_at(position, target, self._world_up)
         self._look_distance = float(np.linalg.norm(np.subtract(target, position)))
 
     @property
@@ -82,12 +85,12 @@ class PerspectiveCamera(Camera):
         self,
         position=(3.0, 3.0, 3.0),
         target=(0.0, 0.0, 0.0),
-        up=(0.0, 0.0, 1.0),
+        world_up=(0.0, 0.0, 1.0),
         fov: float = 45.0,
         near: float = 0.1,
         far: float = 100.0,
     ) -> None:
-        super().__init__(position, target, up)
+        super().__init__(position, target, world_up)
         self.fov = fov
         self.near = near
         self.far = far
@@ -105,11 +108,11 @@ class OrthographicCamera(Camera):
         height: float = 2.0,
         position=(0.0, 0.0, 1.0),
         target=(0.0, 0.0, 0.0),
-        up=(0.0, 1.0, 0.0),
+        world_up=(0.0, 1.0, 0.0),
         near: float = 0.0,
         far: float = 2.0,
     ) -> None:
-        super().__init__(position, target, up)
+        super().__init__(position, target, world_up)
         if width <= 0.0 or height <= 0.0:
             raise ValueError("orthographic width and height must be positive")
         self.width = width

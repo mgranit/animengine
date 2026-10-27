@@ -35,7 +35,7 @@ def test_position_and_target_properties_round_trip():
     camera = PerspectiveCamera(position=(3, 2, 1), target=(1, 0, 0))
     assert np.allclose(camera.position, [3, 2, 1])
     assert np.allclose(camera.target, [1, 0, 0])
-    assert np.allclose(camera.up, [0, 0, 1])
+    assert np.allclose(camera.world_up, [0, 0, 1])
 
 
 def test_setting_position_keeps_aiming_at_target():
