@@ -65,8 +65,8 @@ class Frame:
     @classmethod
     def look_at(cls, origin, target, up) -> "Frame":
         """Camera-style frame: -z points from `origin` to `target`, +y is as close to `up` as
-        possible and +x is to the right. If `up` is parallel to the view direction, the world
-        axis least aligned with it is used instead.
+        possible and +x is to the right. Raises ValueError if `up` is (nearly) parallel to the
+        view direction, since the roll is then undefined.
         """
         origin = np.asarray(origin, dtype=np.float64)
         forward = np.asarray(target, dtype=np.float64) - origin
@@ -78,10 +78,8 @@ class Frame:
         up = np.asarray(up, dtype=np.float64)
         right = np.cross(forward, up)
         right_length = np.linalg.norm(right)
-        if right_length < _TOLERANCE * max(np.linalg.norm(up), 1.0):
-            fallback = np.eye(3)[np.argmin(np.abs(forward))]
-            right = np.cross(forward, fallback)
-            right_length = np.linalg.norm(right)
+        if right_length <= _TOLERANCE * np.linalg.norm(up):
+            raise ValueError("up must be non-zero and not parallel to the view direction")
         right = right / right_length
         true_up = np.cross(right, forward)
         return cls(origin, np.column_stack((right, true_up, -forward)))

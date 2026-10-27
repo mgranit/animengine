@@ -141,10 +141,13 @@ def test_look_at_points_negative_z_at_target():
     assert np.allclose(frame.to_local_point([0, 0, 0]), [0, 0, -5])
 
 
-def test_look_at_degenerate_up_falls_back():
-    frame = Frame.look_at((0, 0, 5), (0, 0, 0), (0, 0, 1))
-    assert np.allclose(frame.z_axis, [0, 0, 1])
-    assert np.allclose(frame.basis.T @ frame.basis, np.eye(3))
+def test_look_at_rejects_up_parallel_to_view_direction():
+    with pytest.raises(ValueError):
+        Frame.look_at((0, 0, 5), (0, 0, 0), (0, 0, 1))
+    with pytest.raises(ValueError):
+        Frame.look_at((0, 0, 5), (0, 0, 0), (0, 0, -3))
+    with pytest.raises(ValueError):
+        Frame.look_at((0, 0, 5), (0, 0, 0), (0, 0, 0))
 
 
 def test_look_at_rejects_coincident_points():

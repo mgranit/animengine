@@ -76,6 +76,18 @@ def test_fly_controller_vertical_motion_is_along_camera_up():
     assert np.allclose(camera.position, np.array([-1, 0, 1]) / np.sqrt(2))
 
 
+def test_fly_controller_is_continuous_through_straight_up_and_down():
+    camera = PerspectiveCamera(position=(0, 0, 0), target=(1, 0, 0))
+    controller = FlyController(camera, FakeInput())
+    for polar in (89.0, 90.0, -89.0, -90.0):
+        controller.polar = polar
+        controller.update(0.0)
+        frame = camera.frame
+        assert np.allclose(-frame.z_axis, controller._front())
+        assert np.allclose(frame.x_axis, [0, -1, 0])
+        assert np.allclose(frame.y_axis, [-np.sin(np.radians(polar)), 0, np.cos(np.radians(polar))])
+
+
 def test_perspective_camera_puts_target_at_screen_center():
     camera = PerspectiveCamera(position=(3, 3, 3), target=(1, 0, 0))
     assert np.allclose(to_ndc(camera, 16 / 9, [1, 0, 0])[:2], [0, 0], atol=1e-6)

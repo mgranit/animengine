@@ -6,8 +6,6 @@ from animengine.platform import Input
 
 from .camera import PerspectiveCamera
 
-WORLD_UP = np.array([0.0, 0.0, 1.0])
-
 
 class FlyController:
     """WASD/mouse free-fly control for a z-up PerspectiveCamera (preview only)."""
@@ -41,19 +39,26 @@ class FlyController:
             np.sin(polar),
         ])
 
+    def _frame(self) -> Frame:
+        azimuth = np.radians(self.azimuth)
+        front = self._front()
+        right = np.array([np.sin(azimuth), -np.cos(azimuth), 0.0])
+        up = np.cross(right, front)
+        return Frame(self.camera.position, np.column_stack((right, up, -front)))
+
     def _look(self, x: float, y: float) -> None:
         if self._last_cursor is not None:
             dx = x - self._last_cursor[0]
             dy = self._last_cursor[1] - y
             self.azimuth -= dx * self.sensitivity
-            self.polar = float(np.clip(self.polar + dy * self.sensitivity, -89.0, 89.0))
+            self.polar = float(np.clip(self.polar + dy * self.sensitivity, -90.0, 90.0))
         self._last_cursor = (x, y)
 
     def _zoom(self, _dx: float, dy: float) -> None:
         self.camera.fov = float(np.clip(self.camera.fov - dy, 15.0, 45.0))
 
     def update(self, dt: float) -> None:
-        frame = Frame.look_at(self.camera.position, self.camera.position + self._front(), WORLD_UP)
+        frame = self._frame()
         front, right, up = -frame.z_axis, frame.x_axis, frame.y_axis
 
         step = self.speed * dt
