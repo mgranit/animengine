@@ -1,8 +1,9 @@
 
 import numpy as np
+from numpy.typing import ArrayLike
 
 
-def get_translation_matrix(tx, ty, tz, dtype: type[np.floating] = np.float64):
+def get_translation_matrix(tx: float, ty: float, tz: float, dtype: type[np.floating] = np.float64):
     return np.array([
         [1.0, 0.0, 0.0,  tx],
         [0.0, 1.0, 0.0,  ty],
@@ -10,7 +11,7 @@ def get_translation_matrix(tx, ty, tz, dtype: type[np.floating] = np.float64):
         [0.0, 0.0, 0.0, 1.0],
     ], dtype=dtype)
 
-def get_scaling_matrix(sx, sy, sz, dtype: type[np.floating] = np.float64):
+def get_scaling_matrix(sx: float, sy: float, sz: float, dtype: type[np.floating] = np.float64):
     return np.array([
         [ sx, 0.0, 0.0, 0.0],
         [0.0,  sy, 0.0, 0.0],
@@ -18,7 +19,7 @@ def get_scaling_matrix(sx, sy, sz, dtype: type[np.floating] = np.float64):
         [0.0, 0.0, 0.0, 1.0],
     ], dtype=dtype)
 
-def get_rotation_matrix_x(angle_deg, dtype: type[np.floating] = np.float64):
+def get_rotation_matrix_x(angle_deg: float, dtype: type[np.floating] = np.float64) -> np.ndarray:
     angle_rad = np.deg2rad(angle_deg)
     cos = np.cos(angle_rad)
     sin = np.sin(angle_rad)
@@ -29,7 +30,7 @@ def get_rotation_matrix_x(angle_deg, dtype: type[np.floating] = np.float64):
         [0.0, 0.0, 0.0, 1.0],
     ], dtype=dtype)
 
-def get_rotation_matrix_y(angle_deg, dtype: type[np.floating] = np.float64):
+def get_rotation_matrix_y(angle_deg: float, dtype: type[np.floating] = np.float64) -> np.ndarray:
     angle_rad = np.deg2rad(angle_deg)
     cos = np.cos(angle_rad)
     sin = np.sin(angle_rad)
@@ -40,7 +41,7 @@ def get_rotation_matrix_y(angle_deg, dtype: type[np.floating] = np.float64):
         [ 0.0, 0.0, 0.0, 1.0],
     ], dtype=dtype)
 
-def get_rotation_matrix_z(angle_deg, dtype: type[np.floating] = np.float64):
+def get_rotation_matrix_z(angle_deg: float, dtype: type[np.floating] = np.float64) -> np.ndarray:
     angle_rad = np.deg2rad(angle_deg)
     cos = np.cos(angle_rad)
     sin = np.sin(angle_rad)
@@ -51,7 +52,9 @@ def get_rotation_matrix_z(angle_deg, dtype: type[np.floating] = np.float64):
         [ 0.0, 0.0, 0.0, 1.0],
     ], dtype=dtype)
 
-def get_rotation_matrix(angle_deg, axis, dtype: type[np.floating] = np.float64):
+def get_rotation_matrix(
+    angle_deg: float, axis: ArrayLike, dtype: type[np.floating] = np.float64
+) -> np.ndarray:
     """Rodrigues rotation about an arbitrary axis as a 4x4 homogeneous matrix."""
     angle_rad = np.deg2rad(angle_deg)
     cos = np.cos(angle_rad)
