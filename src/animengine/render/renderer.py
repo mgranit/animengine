@@ -33,13 +33,11 @@ class DrawItem(NamedTuple):
 
 
 class _GpuMesh:
-    def __init__(self, instanced: bool = False) -> None:
+    def __init__(self) -> None:
         self.vao = VertexArray()
         self.buffers: dict[str, Buffer] = {}
         self.index_buffer: Buffer | None = None
         self.uploaded: dict[str, int] = {}
-        # Instanced meshes advance their vertex attributes once per instance, not per vertex.
-        self.divisor = 1 if instanced else 0
 
     def sync(self, mesh: Mesh) -> None:
         usage = gl.GL_DYNAMIC_DRAW if mesh.dynamic else gl.GL_STATIC_DRAW
@@ -59,7 +57,7 @@ class _GpuMesh:
                 buffer = Buffer(gl.GL_ARRAY_BUFFER, data, usage)
                 self.buffers[name] = buffer
                 self.vao.add_attribute(buffer, _ATTRIBUTE_LOCATIONS[name], data.shape[1],
-                                       gl.GL_FLOAT, divisor=self.divisor)
+                                       gl.GL_FLOAT)
 
 
 class Renderer:
@@ -72,7 +70,6 @@ class Renderer:
     def __init__(self) -> None:
         self._shaders: dict[str, Shader] = {}
         self._meshes: WeakKeyDictionary[Mesh, _GpuMesh] = WeakKeyDictionary()
-        self._instanced_meshes: WeakKeyDictionary[Mesh, _GpuMesh] = WeakKeyDictionary()
 
     def _shader(self, kind: str) -> Shader:
         shader = self._shaders.get(kind)
@@ -85,12 +82,11 @@ class Renderer:
             self._shaders[kind] = shader
         return shader
 
-    def _gpu_mesh(self, mesh: Mesh, instanced: bool = False) -> _GpuMesh:
-        cache = self._instanced_meshes if instanced else self._meshes
-        gpu = cache.get(mesh)
+    def _gpu_mesh(self, mesh: Mesh) -> _GpuMesh:
+        gpu = self._meshes.get(mesh)
         if gpu is None:
-            gpu = _GpuMesh(instanced)
-            cache[mesh] = gpu
+            gpu = _GpuMesh()
+            self._meshes[mesh] = gpu
         gpu.sync(mesh)
         return gpu
 
@@ -152,44 +148,25 @@ class Renderer:
             raise ValueError(f"Material '{material.kind}' needs mesh.{required}")
 
         shader = self._shader(material.kind)
-        instanced = material.kind == "glow"
-        gpu = self._gpu_mesh(mesh, instanced)
-        additive = material.blend == "additive"
+        gpu = self._gpu_mesh(mesh)
 
         with shader:
             shader.set_uniform_matrix("mvp", projection_view @ item.model)
             if material.kind != "vertex_color":
                 shader.set_uniform("color", material.color)
-            if instanced:
-                shader.set_uniform("extent", material.glow_extent())
-                shader.set_uniform("core", material.glow_core)
-                shader.set_uniform("half_distance", material.glow_half_distance)
-                shader.set_uniform("power", material.glow_power)
-                if mesh.colors is None:
-                    gl.glVertexAttrib3f(_ATTRIBUTE_LOCATIONS["colors"], 1.0, 1.0, 1.0)
             if draws_points and material.point_size != DEFAULT_POINT_SIZE:
                 gl.glPointSize(material.point_size)
             if draws_lines and material.line_width != DEFAULT_LINE_WIDTH:
                 gl.glLineWidth(material.line_width)
-            if additive:
-                # Additive surfaces are order independent, so they must not hide each other.
-                gl.glBlendFunc(gl.GL_SRC_ALPHA, gl.GL_ONE)
-                gl.glDepthMask(gl.GL_FALSE)
 
             with gpu.vao:
-                if instanced:
-                    gl.glDrawArraysInstanced(gl.GL_TRIANGLE_STRIP, 0, 4, mesh.vertex_count)
+                mode = _GL_MODES[mesh.mode]
+                if mesh.indices is not None:
+                    gl.glDrawElements(mode, len(mesh.indices), gl.GL_UNSIGNED_INT, None)
                 else:
-                    mode = _GL_MODES[mesh.mode]
-                    if mesh.indices is not None:
-                        gl.glDrawElements(mode, len(mesh.indices), gl.GL_UNSIGNED_INT, None)
-                    else:
-                        gl.glDrawArrays(mode, 0, mesh.vertex_count)
+                    gl.glDrawArrays(mode, 0, mesh.vertex_count)
 
             if draws_points and material.point_size != DEFAULT_POINT_SIZE:
                 gl.glPointSize(DEFAULT_POINT_SIZE)
             if draws_lines and material.line_width != DEFAULT_LINE_WIDTH:
                 gl.glLineWidth(DEFAULT_LINE_WIDTH)
-            if additive:
-                gl.glDepthMask(gl.GL_TRUE)
-                gl.glBlendFunc(gl.GL_SRC_ALPHA, gl.GL_ONE_MINUS_SRC_ALPHA)

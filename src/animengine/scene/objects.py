@@ -61,29 +61,3 @@ class Points(Node):
 
     def set_points(self, points) -> None:
         self.mesh.set_positions(points)
-
-
-class Glow(Node):
-    """Particles drawn as additive soft glows that brighten where they overlap.
-
-    `points` are (N, 2) or (N, 3) positions in the node's local frame; optional `colors` are
-    per-particle (N, 3) values that multiply `color` (values above 1 give brighter particles).
-    The glow is 1 within `core` of a particle and halves `half_distance` further out; see
-    `Material`. Sizes are in local units, so the look is independent of resolution. The glows
-    lie in the node's XY plane.
-    """
-
-    def __init__(self, points=None, colors=None, color="#ffffff", core: float = 0.0,
-                 half_distance: float = 0.01, power: float = 2.0, **kwargs) -> None:
-        mesh = Mesh(np.zeros((0, 3)) if points is None else points, mode=DrawMode.POINTS,
-                    colors=colors, dynamic=True)
-        material = Material(kind="glow", color=color, blend="additive", glow_core=core,
-                            glow_half_distance=half_distance, glow_power=power)
-        material.glow_extent()  # validate the falloff parameters
-        super().__init__(mesh, material, **kwargs)
-
-    def set_points(self, points) -> None:
-        self.mesh.set_positions(points)
-
-    def set_colors(self, colors) -> None:
-        self.mesh.set_colors(colors)

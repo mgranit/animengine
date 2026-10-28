@@ -2,12 +2,11 @@
 
 from .anim import ease_in_out_cubic, linear, preview, render_frame, render_video, smoothstep
 from .render import Material, OrthographicCamera, PerspectiveCamera
-from .scene import Axes, Cube, Glow, Grid, Lines, Node, Points, Scene
+from .scene import Axes, Cube, Grid, Lines, Node, Points, Scene
 
 __all__ = [
     "Axes",
     "Cube",
-    "Glow",
     "Grid",
     "Lines",
     "Material",

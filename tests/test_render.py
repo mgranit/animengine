@@ -4,7 +4,6 @@ import pytest
 
 from animengine import (
     Cube,
-    Glow,
     OrthographicCamera,
     Points,
     Scene,
@@ -56,45 +55,6 @@ def test_image_is_top_down():
     frame = render_frame(scene, samples=0)
     assert frame[:16].max() == 255
     assert frame[48:].max() == 0
-
-
-def glow_scene(points, size=(64, 64), **kwargs):
-    scene = Scene(size=size, camera=OrthographicCamera(height=2.0))
-    scene.add(Glow(points, core=0.05, half_distance=0.1, power=3.0, **kwargs))
-    return scene
-
-
-def test_glow_is_brightest_at_center_and_fades_to_nothing():
-    frame = render_frame(glow_scene([[0.0, 0.0, 0.0]]), samples=0)
-    assert np.all(frame[32, 32] == 255)
-    assert 0 < frame[32, 32 + 14, 0] < frame[32, 32 + 8, 0] < 255
-    assert frame[0, 0].max() == 0
-
-
-def test_glow_adds_where_particles_overlap():
-    single = render_frame(glow_scene([[0.0, 0.0, 0.0]], color="#404040"), samples=0)
-    double = render_frame(glow_scene([[0.0, 0.0, 0.0]] * 2, color="#404040"), samples=0)
-    assert abs(int(double[32, 38, 0]) - 2 * int(single[32, 38, 0])) <= 2
-    assert single[32, 38, 0] > 0
-
-
-def test_glow_size_does_not_depend_on_resolution():
-    small = render_frame(glow_scene([[0.0, 0.0, 0.0]]), samples=0)
-    large = render_frame(glow_scene([[0.0, 0.0, 0.0]], size=(128, 128)), samples=0)
-    ratio = large[..., 0].sum(dtype=float) / small[..., 0].sum(dtype=float)
-    assert ratio == pytest.approx(4.0, rel=0.05)
-
-
-def test_glow_uses_per_particle_colors():
-    scene = glow_scene([[-0.5, 0.0, 0.0], [0.5, 0.0, 0.0]], colors=[[1, 0, 0], [0, 0, 1]])
-    frame = render_frame(scene, samples=0)
-    assert np.all(frame[32, 16] == [255, 0, 0])
-    assert np.all(frame[32, 48] == [0, 0, 255])
-
-
-def test_glow_validates_falloff_parameters():
-    with pytest.raises(ValueError):
-        Glow([[0.0, 0.0, 0.0]], half_distance=0.0)
 
 
 def test_rendering_is_deterministic():
