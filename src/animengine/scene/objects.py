@@ -1,6 +1,14 @@
 import numpy as np
 
-from animengine.render import DrawMode, Material, Mesh, Texture, primitives
+from animengine.render import (
+    DEFAULT_LINE_WIDTH,
+    DEFAULT_POINT_SIZE,
+    DrawMode,
+    Material,
+    Mesh,
+    Texture,
+    primitives,
+)
 
 from .node import Node
 
@@ -23,7 +31,8 @@ class TexturedCube(Node):
 class Axes(Node):
     """RGB axes for x, y, z."""
 
-    def __init__(self, length: float = 1.0, position=None, line_width: float = 1.0,
+    def __init__(self, length: float = 1.0, position=None,
+                 line_width: float = DEFAULT_LINE_WIDTH,
                  **kwargs) -> None:
         material = Material(kind="vertex_color", line_width=line_width)
         super().__init__(primitives.unit_axes(), material, position=position, scale=length,
@@ -40,8 +49,8 @@ class Grid(Node):
 class Lines(Node):
     """Line segments (consecutive point pairs), or a connected strip with `strip=True`."""
 
-    def __init__(self, points=None, color="#ffffff", width: float = 1.0, strip: bool = False,
-                 **kwargs) -> None:
+    def __init__(self, points=None, color="#ffffff", width: float = DEFAULT_LINE_WIDTH,
+                 strip: bool = False, **kwargs) -> None:
         mode = DrawMode.LINE_STRIP if strip else DrawMode.LINES
         mesh = Mesh(np.zeros((0, 3)) if points is None else points, mode=mode, dynamic=True)
         super().__init__(mesh, Material(color=color, line_width=width), **kwargs)
@@ -53,7 +62,8 @@ class Lines(Node):
 class Points(Node):
     """Round points; `size` is in pixels of the render target."""
 
-    def __init__(self, points=None, color="#ffffff", size: float = 3.0, **kwargs) -> None:
+    def __init__(self, points=None, color="#ffffff", size: float = DEFAULT_POINT_SIZE,
+                 **kwargs) -> None:
         mesh = Mesh(np.zeros((0, 3)) if points is None else points, mode=DrawMode.POINTS,
                     dynamic=True)
         super().__init__(mesh, Material(kind="points", color=color, point_size=size), **kwargs)

@@ -6,6 +6,9 @@ import numpy as np
 from .color import to_rgba
 from .texture import Texture
 
+DEFAULT_POINT_SIZE = 1.0
+DEFAULT_LINE_WIDTH = 1.0
+
 # Keep in sync with `cutoff` in shaders/glow.frag.
 _GLOW_CUTOFF = 1.0 / 255.0
 
@@ -29,8 +32,8 @@ class Material:
     kind: Literal["flat", "vertex_color", "textured", "points", "glow"] = "flat"
     color: np.ndarray = field(default_factory=lambda: to_rgba("#ffffff"))
     texture: Texture | None = None
-    point_size: float = 3.0
-    line_width: float = 1.0
+    point_size: float = DEFAULT_POINT_SIZE
+    line_width: float = DEFAULT_LINE_WIDTH
     blend: Literal["alpha", "additive"] = "alpha"
     glow_core: float = 0.0
     glow_half_distance: float = 0.01

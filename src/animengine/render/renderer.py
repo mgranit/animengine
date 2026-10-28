@@ -10,7 +10,7 @@ from animengine.gpu import Buffer, Framebuffer, Shader, Texture2D, VertexArray
 
 from .camera import Camera
 from .color import to_rgba
-from .material import Material
+from .material import DEFAULT_LINE_WIDTH, DEFAULT_POINT_SIZE, Material
 from .mesh import DrawMode, Mesh
 from .texture import Texture
 
@@ -127,8 +127,6 @@ class Renderer:
         gl.glDepthFunc(gl.GL_LEQUAL)
         gl.glEnable(gl.GL_BLEND)
         gl.glBlendFunc(gl.GL_SRC_ALPHA, gl.GL_ONE_MINUS_SRC_ALPHA)
-        gl.glEnable(gl.GL_PROGRAM_POINT_SIZE)
-
         has_bars = (x, y, viewport_width, viewport_height) != (0, 0, width, height)
         clear_color = bar_color if has_bars and bar_color is not None else background
         gl.glDisable(gl.GL_SCISSOR_TEST)
@@ -155,6 +153,9 @@ class Renderer:
         if mesh.vertex_count == 0:
             return
 
+        draws_points = mesh.mode is DrawMode.POINTS
+        draws_lines = mesh.mode in (DrawMode.LINES, DrawMode.LINE_STRIP)
+        
         required = _REQUIRED_ATTRIBUTES.get(material.kind)
         if required is not None and getattr(mesh, required) is None:
             raise ValueError(f"Material '{material.kind}' needs mesh.{required}")
@@ -168,8 +169,6 @@ class Renderer:
             shader.set_uniform_matrix("mvp", projection_view @ item.model)
             if material.kind != "vertex_color":
                 shader.set_uniform("color", material.color)
-            if material.kind == "points":
-                shader.set_uniform("point_size", material.point_size)
             if instanced:
                 shader.set_uniform("extent", material.glow_extent())
                 shader.set_uniform("core", material.glow_core)
@@ -186,7 +185,9 @@ class Renderer:
                 gpu_texture.bind()
                 shader.set_uniform("tex", 0)
 
-            if material.line_width != 1.0:
+            if draws_points and material.point_size != DEFAULT_POINT_SIZE:
+                gl.glPointSize(material.point_size)
+            if draws_lines and material.line_width != DEFAULT_LINE_WIDTH:
                 gl.glLineWidth(material.line_width)
             if additive:
                 # Additive surfaces are order independent, so they must not hide each other.
@@ -203,10 +204,13 @@ class Renderer:
                     else:
                         gl.glDrawArrays(mode, 0, mesh.vertex_count)
 
+            if draws_points and material.point_size != DEFAULT_POINT_SIZE:
+                gl.glPointSize(DEFAULT_POINT_SIZE)
+            if draws_lines and material.line_width != DEFAULT_LINE_WIDTH:
+                gl.glLineWidth(DEFAULT_LINE_WIDTH)
             if additive:
                 gl.glDepthMask(gl.GL_TRUE)
                 gl.glBlendFunc(gl.GL_SRC_ALPHA, gl.GL_ONE_MINUS_SRC_ALPHA)
-            if material.line_width != 1.0:
-                gl.glLineWidth(1.0)
+            
             if gpu_texture is not None:
                 gpu_texture.unbind()
