@@ -45,7 +45,7 @@ Each layer imports only from the layers above it in this list.
 |---|---|
 | `animengine.linalg` | `Frame` (origin + orthonormal basis), transform, view and projection matrices |
 | `animengine.platform` | GLFW window, input events, clocks |
-| `animengine.gpu` | Thin OpenGL wrappers: buffers, shaders, textures, framebuffers |
+| `animengine.gpu` | Thin OpenGL wrappers: buffers, shaders, framebuffers |
 | `animengine.render` | Cameras, meshes, materials, the `Renderer` (GLSL lives in `render/shaders`) |
 | `animengine.scene` | `Scene`, `Node` and ready-made objects (`Cube`, `Lines`, `Points`, ...) |
 | `animengine.anim` | Easing, video export, `render_video`, real-time `preview` |

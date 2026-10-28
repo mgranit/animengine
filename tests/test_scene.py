@@ -113,14 +113,12 @@ def test_set_points_bumps_only_the_positions_version():
     assert points.mesh.positions.dtype == np.float32
 
 
-def test_mesh_attribute_setters_track_uvs_and_indices():
+def test_mesh_attribute_setters_track_indices():
     mesh = Lines().mesh
     seen = {"positions": mesh.version("positions")}
-    mesh.set_uvs([[0, 0], [1, 1]])
     mesh.set_indices([0, 1])
 
-    assert mesh.changed_since(seen) == ["uvs", "indices"]
-    assert mesh.uvs.dtype == np.float32
+    assert mesh.changed_since(seen) == ["indices"]
     assert mesh.indices.dtype == np.uint32
     assert mesh.indices.shape == (2,)
 

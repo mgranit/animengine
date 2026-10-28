@@ -10,7 +10,7 @@ def main() -> None:
     camera = PerspectiveCamera(position=(4.0, -4.0, 3.0), target=(0.0, 0.0, 0.0))
     scene = Scene(size=(1280, 720), background="#202428", camera=camera)
     scene.add(Grid(size=10.0, step=1.0))
-    scene.add(Axes(length=1.5, line_width=3.0))
+    scene.add(Axes(length=1.0, line_width=3.0))
     preview(scene, title="World origin", fly_camera=True)
 
 

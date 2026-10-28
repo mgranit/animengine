@@ -12,7 +12,6 @@ dependencies = [
     "numpy",
     "glfw",
     "PyOpenGL",
-    "Pillow",
     "imageio-ffmpeg",
 ]
 

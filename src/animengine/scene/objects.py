@@ -6,7 +6,6 @@ from animengine.render import (
     DrawMode,
     Material,
     Mesh,
-    Texture,
     primitives,
 )
 
@@ -18,14 +17,6 @@ class Cube(Node):
                  wireframe: bool = False, **kwargs) -> None:
         mesh = primitives.unit_cube_edges() if wireframe else primitives.unit_cube()
         super().__init__(mesh, Material(color=color), position=position, scale=size, **kwargs)
-
-
-class TexturedCube(Node):
-    def __init__(self, texture: Texture, position=None, size: float = 1.0,
-                 **kwargs) -> None:
-        material = Material(kind="textured", texture=texture)
-        super().__init__(primitives.unit_textured_cube(), material, position=position,
-                         scale=size, **kwargs)
 
 
 class Axes(Node):

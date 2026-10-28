@@ -6,13 +6,12 @@ from weakref import WeakKeyDictionary
 import numpy as np
 import OpenGL.GL as gl
 
-from animengine.gpu import Buffer, Framebuffer, Shader, Texture2D, VertexArray
+from animengine.gpu import Buffer, Framebuffer, Shader, VertexArray
 
 from .camera import Camera
 from .color import to_rgba
 from .material import DEFAULT_LINE_WIDTH, DEFAULT_POINT_SIZE, Material
 from .mesh import DrawMode, Mesh
-from .texture import Texture
 
 _GL_MODES = {
     DrawMode.POINTS: gl.GL_POINTS,
@@ -22,9 +21,9 @@ _GL_MODES = {
 }
 
 # Attribute name -> shader input location.
-_ATTRIBUTE_LOCATIONS = {"positions": 0, "colors": 1, "uvs": 2}
+_ATTRIBUTE_LOCATIONS = {"positions": 0, "colors": 1}
 
-_REQUIRED_ATTRIBUTES = {"vertex_color": "colors", "textured": "uvs"}
+_REQUIRED_ATTRIBUTES = {"vertex_color": "colors"}
 
 
 class DrawItem(NamedTuple):
@@ -74,14 +73,6 @@ class Renderer:
         self._shaders: dict[str, Shader] = {}
         self._meshes: WeakKeyDictionary[Mesh, _GpuMesh] = WeakKeyDictionary()
         self._instanced_meshes: WeakKeyDictionary[Mesh, _GpuMesh] = WeakKeyDictionary()
-        self._textures: WeakKeyDictionary[Texture, Texture2D] = WeakKeyDictionary()
-
-    def _gpu_texture(self, texture: Texture) -> Texture2D:
-        gpu = self._textures.get(texture)
-        if gpu is None:
-            gpu = Texture2D(texture.data, mipmaps=texture.mipmaps)
-            self._textures[texture] = gpu
-        return gpu
 
     def _shader(self, kind: str) -> Shader:
         shader = self._shaders.get(kind)
@@ -176,15 +167,6 @@ class Renderer:
                 shader.set_uniform("power", material.glow_power)
                 if mesh.colors is None:
                     gl.glVertexAttrib3f(_ATTRIBUTE_LOCATIONS["colors"], 1.0, 1.0, 1.0)
-            gpu_texture = None
-            if material.kind == "textured":
-                if material.texture is None:
-                    raise ValueError("Material 'textured' needs a texture")
-                gpu_texture = self._gpu_texture(material.texture)
-                gl.glActiveTexture(gl.GL_TEXTURE0)
-                gpu_texture.bind()
-                shader.set_uniform("tex", 0)
-
             if draws_points and material.point_size != DEFAULT_POINT_SIZE:
                 gl.glPointSize(material.point_size)
             if draws_lines and material.line_width != DEFAULT_LINE_WIDTH:
@@ -211,6 +193,3 @@ class Renderer:
             if additive:
                 gl.glDepthMask(gl.GL_TRUE)
                 gl.glBlendFunc(gl.GL_SRC_ALPHA, gl.GL_ONE_MINUS_SRC_ALPHA)
-            
-            if gpu_texture is not None:
-                gpu_texture.unbind()

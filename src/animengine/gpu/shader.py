@@ -18,8 +18,6 @@ class Shader:
         gl.glDeleteShader(fragment_shader)
         
         self._uniform_locs = {}
-        
-        self._textures = []
     
     def _compile_shader(self, shader_type, source):
         
@@ -192,28 +190,12 @@ class Shader:
     
     def __enter__(self):
         self.use()
-        self.activate_textures()
         return self
     
     def __exit__(self, *_):
-        self.deactivate_textures()
         self.stop()
     
     @property
     def is_active(self):
         return gl.glGetIntegerv(gl.GL_CURRENT_PROGRAM) == self.program
     
-    def add_texture(self, name, texture, unit):
-        with self:
-            self.set_uniform(name, unit)
-        self._textures.append((texture, unit))
-    
-    def activate_textures(self):
-        for texture, unit in self._textures:
-            gl.glActiveTexture(gl.GL_TEXTURE0 + unit)
-            gl.glBindTexture(gl.GL_TEXTURE_2D, texture.id)
-    
-    def deactivate_textures(self):
-        for _, unit in self._textures:
-            gl.glActiveTexture(gl.GL_TEXTURE0 + unit)
-            gl.glBindTexture(gl.GL_TEXTURE_2D, 0)

@@ -11,20 +11,19 @@ class DrawMode(Enum):
     TRIANGLES = "triangles"
 
 
-_ATTRIBUTES = ("positions", "colors", "uvs", "indices")
+_ATTRIBUTES = ("positions", "colors", "indices")
 
 
 @dataclass(eq=False)
 class Mesh:
     """CPU-side geometry; each Renderer uploads it and re-uploads whatever changed.
 
-    positions are (N, 2) or (N, 3); colors (N, 3); uvs (N, 2); indices (M,).
+    positions are (N, 2) or (N, 3); colors (N, 3); indices (M,).
     """
 
     positions: np.ndarray
     mode: DrawMode = DrawMode.TRIANGLES
     colors: np.ndarray | None = None
-    uvs: np.ndarray | None = None
     indices: np.ndarray | None = None
     dynamic: bool = False
     _versions: dict[str, int] = field(default_factory=dict, init=False, repr=False)
@@ -33,8 +32,6 @@ class Mesh:
         self.set_positions(self.positions)
         if self.colors is not None:
             self.set_colors(self.colors)
-        if self.uvs is not None:
-            self.set_uvs(self.uvs)
         if self.indices is not None:
             self.set_indices(self.indices)
 
@@ -56,10 +53,6 @@ class Mesh:
     def set_colors(self, colors) -> None:
         self.colors = self._check("colors", colors, (3,))
         self._touch("colors")
-
-    def set_uvs(self, uvs) -> None:
-        self.uvs = self._check("uvs", uvs, (2,))
-        self._touch("uvs")
 
     def set_indices(self, indices) -> None:
         self.indices = np.ascontiguousarray(indices, dtype=np.uint32).ravel()

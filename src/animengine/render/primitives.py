@@ -6,8 +6,8 @@ import numpy as np
 from .mesh import DrawMode, Mesh
 
 
-def _cube_faces() -> tuple[np.ndarray, np.ndarray]:
-    positions, uvs = [], []
+def _cube_faces() -> np.ndarray:
+    positions = []
     corners = [(-0.5, -0.5), (0.5, -0.5), (0.5, 0.5), (-0.5, 0.5)]
     for axis, sign in product(range(3), (-1.0, 1.0)):
         u, v = (axis + 1) % 3, (axis + 2) % 3
@@ -17,19 +17,12 @@ def _cube_faces() -> tuple[np.ndarray, np.ndarray]:
             vertex[axis] = sign * 0.5
             vertex[u], vertex[v] = corners[i]
             positions.append(vertex)
-            uvs.append((corners[i][0] + 0.5, corners[i][1] + 0.5))
-    return np.array(positions, dtype=np.float32), np.array(uvs, dtype=np.float32)
+    return np.array(positions, dtype=np.float32)
 
 
 @cache
 def unit_cube() -> Mesh:
-    return Mesh(_cube_faces()[0])
-
-
-@cache
-def unit_textured_cube() -> Mesh:
-    positions, uvs = _cube_faces()
-    return Mesh(positions, uvs=uvs)
+    return Mesh(_cube_faces())
 
 
 @cache

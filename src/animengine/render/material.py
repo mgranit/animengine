@@ -4,7 +4,6 @@ from typing import Literal
 import numpy as np
 
 from .color import to_rgba
-from .texture import Texture
 
 DEFAULT_POINT_SIZE = 1.0
 DEFAULT_LINE_WIDTH = 1.0
@@ -29,9 +28,8 @@ class Material:
     not affected by resolution. The sprite is cut off where the falloff drops below 1/255.
     """
 
-    kind: Literal["flat", "vertex_color", "textured", "points", "glow"] = "flat"
+    kind: Literal["flat", "vertex_color", "points", "glow"] = "flat"
     color: np.ndarray = field(default_factory=lambda: to_rgba("#ffffff"))
-    texture: Texture | None = None
     point_size: float = DEFAULT_POINT_SIZE
     line_width: float = DEFAULT_LINE_WIDTH
     blend: Literal["alpha", "additive"] = "alpha"

@@ -8,8 +8,6 @@ from animengine import (
     OrthographicCamera,
     Points,
     Scene,
-    Texture,
-    TexturedCube,
     render_frame,
     render_video,
 )
@@ -97,13 +95,6 @@ def test_glow_uses_per_particle_colors():
 def test_glow_validates_falloff_parameters():
     with pytest.raises(ValueError):
         Glow([[0.0, 0.0, 0.0]], half_distance=0.0)
-
-
-def test_textured_cube_samples_its_texture():
-    texture = Texture(np.full((4, 4, 3), [0, 255, 0], dtype=np.uint8), mipmaps=False)
-    scene = Scene(size=(64, 64))
-    scene.add(TexturedCube(texture))
-    assert np.all(render_frame(scene)[32, 32] == [0, 255, 0])
 
 
 def test_rendering_is_deterministic():
