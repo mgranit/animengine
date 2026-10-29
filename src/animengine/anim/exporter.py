@@ -67,3 +67,18 @@ class VideoWriter:
             self.close()
         else:
             self.abort()
+
+
+def mux_audio(video, audio, out) -> None:
+    """Combine a rendered video and WAV into an H.264/AAC output."""
+    path = Path(out)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    command = [
+        imageio_ffmpeg.get_ffmpeg_exe(), "-y", "-loglevel", "error",
+        "-i", str(video), "-i", str(audio),
+        "-map", "0:v:0", "-map", "1:a:0", "-c:v", "copy", "-c:a", "aac",
+        "-b:a", "192k", str(path),
+    ]
+    result = subprocess.run(command, capture_output=True, text=True)
+    if result.returncode:
+        raise RuntimeError(f"ffmpeg audio mux failed:\n{result.stderr}")

@@ -36,6 +36,13 @@ pip install -e ".[dev]"
 
 ffmpeg is bundled through `imageio-ffmpeg`; nothing else needs to be installed. An OpenGL 3.3
 capable GPU and driver is required (offline rendering uses a hidden window).
+For live audio preview, install the optional playback dependency:
+
+```
+pip install -e ".[audio]"
+```
+
+Video export with audio uses the bundled ffmpeg and does not require the audio extra.
 
 ## Layout
 
@@ -48,8 +55,9 @@ Each layer imports only from the layers above it in this list.
 | `animengine.gpu` | Thin OpenGL wrappers: buffers, shaders, framebuffers |
 | `animengine.render` | Cameras, meshes, materials, the `Renderer` (GLSL lives in `render/shaders`) |
 | `animengine.scene` | `Scene`, `Node` and ready-made objects (`Cube`, `Lines`, `Points`, ...) |
-| `animengine.anim` | Easing, video export, `render_video`, real-time `preview` |
 | `animengine.physics` | CPU-only 2D particle state, integrators, rectangular walls and fixed stepping |
+| `animengine.audio` | Mono sound synthesis, sample-timed mixing and peak control |
+| `animengine.anim` | Easing, video export, `render_video`, real-time `preview` |
 
 ## Conventions
 
@@ -119,6 +127,68 @@ python examples/bouncing_points.py --integrator euler --out output/bouncing_poin
 
 Its camera and simulation rectangle share fixed world-space bounds; the camera letterboxes when
 the window aspect ratio differs. No collisions between particles are calculated.
+
+## Sound
+
+The bouncing-points example can synthesize a low thump for each wall impact:
+
+```
+python examples/bouncing_points.py --preview --sound
+python examples/bouncing_points.py --sound --out output/bouncing_points.mp4
+```
+
+Without `--sound` the example remains silent. `AudioMixer` schedules mono `Sound` objects in
+simulation time and mixes them at 48 kHz by default. `synthesize_thump()` supplies an enveloped
+waveform, and the example scales its gain by normal impact speed. The default mixer permits 64
+overlapping voices. Further voices are dropped and reported as a warning; late preview events
+are played at the next available sample and reported as a warning.
+
+For example, to connect an existing particle simulation to sound:
+
+```python
+from animengine.audio import AudioMixer, synthesize_thump
+from animengine.physics import ParticleSimulation, RectangularBoundary
+
+mixer = AudioMixer()
+thump = synthesize_thump(mixer.sample_rate)
+
+def on_wall(event):
+    mixer.schedule(thump, event.time, gain=min(event.speed * 0.18, 0.2))
+
+simulation = ParticleSimulation(
+    state, boundary=RectangularBoundary((-1, -1), (1, 1)), on_collision=on_wall
+)
+# Advance simulation in update(), then pass audio=mixer to preview() or render_video().
+```
+
+The mixer uses a soft-knee, instantaneous-attack gain limiter with a 100 ms release and a
+default sample ceiling of 0.85. It prevents samples from exceeding that ceiling before output,
+but is not a lookahead or true-peak limiter: strong overload can still sound distorted, and
+audio-device processing or lossy encoding can change peaks. Lower the individual gain or
+increase the voice limit deliberately if the result is too dense.
+
+Pass the same fresh mixer to `preview(..., audio=mixer)` or
+`render_video(..., audio=mixer)`, and schedule sounds from the animation's collision callback.
+Live preview needs an audio device and the optional `sounddevice` dependency. It delays audio
+by 60 ms by default (`audio_delay` changes this) to give the simulation time to schedule
+events; the device adds its own latency and a slow preview may still produce late-event or
+underrun warnings. The displayed image is not intentionally delayed. On Windows, when PortAudio
+is using its default MME device, preview prefers the system's default WASAPI output; if that
+device cannot be opened, it warns and uses the PortAudio default. Other configured PortAudio
+devices are retained. Pass `audio_device` to `preview` to choose an output device explicitly.
+
+Bluetooth headphones can add latency beyond the audio stream's reported latency, so preview
+sound may lag behind the image. `--audio-delay` changes the scheduling buffer; lowering it
+too far can cause late-event or underrun warnings, while raising it increases audio delay.
+Use `--audio-device` with an index or name to select a device explicitly;
+`python -m sounddevice` lists available devices.
+
+Video export mixes audio while the video is rendered, then muxes it as AAC; no simulation
+reset is needed. It keeps the rounded video duration and fades audio over the final 50 ms
+(`audio_fade` changes this). With audio enabled, `render_video` calls `update` for the final
+frame interval after writing the last frame, so collisions during that interval are included.
+Without audio, the existing update-call behavior is unchanged. The mixer must start at sample
+zero and cannot be reused for a second preview or export without creating a new one.
 
 ## Examples
 

@@ -16,6 +16,7 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
+audio = ["sounddevice>=0.4"]
 speed = ["PyOpenGL_accelerate"]
 dev = ["pytest", "ruff"]
 
