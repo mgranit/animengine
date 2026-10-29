@@ -97,6 +97,70 @@ def test_many_bounces_match_smaller_steps(integrator):
     assert np.allclose(states[0].velocities, states[1].velocities, atol=1e-12)
 
 
+def test_wall_events_report_all_impacts_in_time_order():
+    events = []
+    state = ParticleState([[0, 0], [0, 0]], [[2, 0], [0, -1]])
+    simulation = ParticleSimulation(
+        state, boundary=RectangularBoundary((-1, -1), (1, 1)), on_collision=events.append,
+    )
+    simulation.step(3)
+    assert [event.time for event in events] == pytest.approx([0.5, 1, 1.5, 2.5, 3])
+    assert [(event.particle, event.axis, event.side) for event in events] == [
+        (0, 0, "upper"), (1, 1, "lower"), (0, 0, "lower"),
+        (0, 0, "upper"), (1, 1, "upper"),
+    ]
+    assert [event.speed for event in events] == pytest.approx([2, 1, 2, 2, 1])
+    assert [event.position for event in events] == pytest.approx([
+        (1, 0), (0, -1), (-1, 0), (1, 0), (0, 1),
+    ])
+
+
+def test_corner_events_and_wall_start_do_not_duplicate_end_hits():
+    events = []
+    state = ParticleState([[0, 0]], [[1, 1]])
+    simulation = ParticleSimulation(
+        state, boundary=RectangularBoundary((-1, -1), (1, 1)), on_collision=events.append,
+    )
+    simulation.step(1)
+    simulation.step(0.25)
+    assert [(event.time, event.axis, event.side) for event in events] == [
+        (1, 0, "upper"), (1, 1, "upper"),
+    ]
+    assert all(event.position == (1, 1) for event in events)
+
+    events.clear()
+    outward = ParticleSimulation(
+        ParticleState([[1, 0]], [[1, 0]]),
+        boundary=RectangularBoundary((-1, -1), (1, 1)), on_collision=events.append,
+    )
+    outward.step(0.5)
+    assert len(events) == 1
+    assert events[0].time == 0
+    assert events[0].side == "upper"
+
+
+def test_collision_event_times_match_subdivided_free_motion():
+    events = [[], []]
+    simulations = [
+        ParticleSimulation(
+            ParticleState([[0, 0]], [[3, -2]]),
+            boundary=RectangularBoundary((-1, -1), (1, 1)),
+            on_collision=event_list.append,
+        )
+        for event_list in events
+    ]
+    simulations[0].step(2.0)
+    for _ in range(20):
+        simulations[1].step(0.1)
+    assert len(events[0]) == len(events[1])
+    for whole, subdivided in zip(*events, strict=True):
+        assert whole.time == pytest.approx(subdivided.time)
+        assert whole.position == pytest.approx(subdivided.position)
+        assert (whole.axis, whole.side, whole.speed) == pytest.approx(
+            (subdivided.axis, subdivided.side, subdivided.speed)
+        )
+
+
 def test_particle_state_copies_inputs_and_supports_empty_arrays():
     positions = np.array([[0, 0]], dtype=np.float32)
     state = ParticleState(positions, [[1, 2]])

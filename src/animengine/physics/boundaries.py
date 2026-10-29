@@ -1,6 +1,8 @@
 import numpy as np
 from numpy.typing import NDArray
 
+from .events import WallCollision
+
 Array = NDArray[np.float64]
 
 
@@ -54,3 +56,57 @@ class RectangularBoundary:
         result_velocities = np.where(phase == 0, np.abs(result_velocities), result_velocities)
         result_velocities = np.where(phase == width, -np.abs(result_velocities), result_velocities)
         return result_positions, result_velocities
+
+    def collisions(
+        self, positions: Array, endpoints: Array, dt: float, start_time: float,
+    ) -> list[WallCollision]:
+        """Find wall crossings along the straight segment of each unconstrained step."""
+        positions = _vectors("positions", positions)
+        endpoints = _vectors("endpoints", endpoints)
+        if positions.shape != endpoints.shape:
+            raise ValueError("endpoints must match positions")
+        self.validate_positions(positions)
+        if not np.isfinite(dt) or dt <= 0 or not np.isfinite(start_time):
+            raise ValueError("dt must be positive and times must be finite")
+        displacement = endpoints - positions
+        if not np.all(np.isfinite(displacement)):
+            raise ValueError("particle displacement is too large to resolve")
+
+        width = self.upper - self.lower
+        collisions = []
+        for particle, (start, delta) in enumerate(zip(positions, displacement, strict=True)):
+            for axis in (0, 1):
+                distance = abs(delta[axis])
+                if distance == 0:
+                    continue
+                first_upper = delta[axis] > 0
+                first_distance = (
+                    self.upper[axis] - start[axis] if first_upper
+                    else start[axis] - self.lower[axis]
+                )
+                if first_distance > distance:
+                    continue
+                with np.errstate(over="ignore"):
+                    crossings = (distance - first_distance) / width[axis]
+                    speed = distance / dt
+                if not np.isfinite(crossings) or crossings >= 100_000:
+                    raise ValueError("too many wall collisions in one step")
+                if not np.isfinite(speed):
+                    raise ValueError("wall collision speed is too large")
+                count = int(np.floor(crossings)) + 1
+                for crossing in range(count):
+                    fraction = (first_distance + crossing * width[axis]) / distance
+                    phase = np.remainder(start + fraction * delta - self.lower, 2 * width)
+                    impact = self.lower + np.where(phase > width, 2 * width - phase, phase)
+                    is_upper = first_upper == (crossing % 2 == 0)
+                    impact[axis] = self.upper[axis] if is_upper else self.lower[axis]
+                    collisions.append(WallCollision(
+                        time=float(start_time + fraction * dt),
+                        particle=particle,
+                        position=(float(impact[0]), float(impact[1])),
+                        axis=axis,
+                        side="upper" if is_upper else "lower",
+                        speed=float(speed),
+                    ))
+        collisions.sort(key=lambda event: (event.time, event.particle, event.axis))
+        return collisions

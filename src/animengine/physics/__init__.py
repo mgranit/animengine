@@ -1,6 +1,7 @@
 """CPU-only particle simulation, independent of the renderer."""
 
 from .boundaries import RectangularBoundary
+from .events import WallCollision
 from .integrators import forward_euler, velocity_verlet
 from .particles import ParticleSimulation, ParticleState, zero_acceleration
 from .timing import FixedStepper
@@ -10,6 +11,7 @@ __all__ = [
     "ParticleSimulation",
     "ParticleState",
     "RectangularBoundary",
+    "WallCollision",
     "forward_euler",
     "velocity_verlet",
     "zero_acceleration",

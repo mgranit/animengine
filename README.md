@@ -94,6 +94,15 @@ this is an approximation, not an impact-time solver. Reduce the timestep near wa
 acceleration callback must also accept the unconstrained endpoint outside the rectangle. The
 simulation recomputes acceleration at the reflected position for the next step.
 
+Pass an `on_collision(event)` callback to `ParticleSimulation` to receive `WallCollision`
+events. Each event contains simulation time in seconds, particle index, world-space impact
+position, axis, `"lower"` or `"upper"` side, and normal impact speed. Events are ordered by
+time; corner hits produce one event per wall. For free motion, times and positions are exact
+up to floating-point precision, including multiple impacts in a step. With acceleration they
+are approximated along the unconstrained step's straight chord; the reported speed is the
+chord's normal speed. Event generation is optional and is limited to 100,000 collisions per
+particle per axis per step; exceeding that limit raises an error.
+
 `FixedStepper(simulation.step, dt)` accumulates elapsed time and advances in fixed steps, keeping
 any fractional remainder. This is useful because `preview` supplies variable wall-clock `dt`,
 while offline rendering supplies fixed `dt`. The stepper does not discard elapsed time or cap

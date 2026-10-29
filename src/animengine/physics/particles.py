@@ -4,6 +4,7 @@ import numpy as np
 from numpy.typing import NDArray
 
 from .boundaries import RectangularBoundary
+from .events import WallCollision
 from .integrators import Integrator, velocity_verlet
 
 ParticleArray = NDArray[np.float64]
@@ -51,6 +52,7 @@ class ParticleSimulation:
         acceleration: Acceleration = zero_acceleration,
         integrator: Integrator = velocity_verlet,
         boundary: RectangularBoundary | None = None,
+        on_collision: Callable[[WallCollision], None] | None = None,
     ) -> None:
         if not callable(acceleration) or not callable(integrator):
             raise TypeError("acceleration and integrator must be callable")
@@ -58,6 +60,10 @@ class ParticleSimulation:
         self.acceleration = acceleration
         self.integrator = integrator
         self.boundary = boundary
+        if on_collision is not None and not callable(on_collision):
+            raise TypeError("on_collision must be callable")
+        self.on_collision = on_collision
+        self.time = 0.0
         if boundary is not None:
             boundary.validate_positions(state.positions)
         self.state.accelerations[:] = self._acceleration_at(state.positions)
@@ -70,6 +76,9 @@ class ParticleSimulation:
             raise ValueError("dt must be finite and non-negative")
         if dt == 0:
             return
+        new_time = self.time + dt
+        if not np.isfinite(new_time):
+            raise ValueError("simulation time is too large")
 
         positions = _particle_array("positions", self.state.positions)
         velocities = _particle_array("velocities", self.state.velocities, positions.shape)
@@ -87,10 +96,17 @@ class ParticleSimulation:
         new_accelerations = _particle_array(
             "integrated accelerations", new_accelerations, positions.shape
         )
+        collisions = []
         if self.boundary is not None:
+            if self.on_collision is not None:
+                collisions = self.boundary.collisions(positions, new_positions, dt, self.time)
             new_positions, new_velocities = self.boundary.resolve(new_positions, new_velocities)
             new_accelerations = self._acceleration_at(new_positions)
 
         self.state.positions[:] = new_positions
         self.state.velocities[:] = new_velocities
         self.state.accelerations[:] = new_accelerations
+        self.time = new_time
+        if self.on_collision is not None:
+            for event in collisions:
+                self.on_collision(event)
