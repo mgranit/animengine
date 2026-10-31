@@ -110,25 +110,26 @@ class Renderer:
             gl.glBindFramebuffer(gl.GL_FRAMEBUFFER, 0)
 
         x, y, viewport_width, viewport_height = camera.viewport_rect((width, height))
+        has_bars = (x, y, viewport_width, viewport_height) != (0, 0, width, height)
+        clear_color = bar_color if has_bars and bar_color is not None else background
+        
         gl.glEnable(gl.GL_DEPTH_TEST)
         gl.glDepthFunc(gl.GL_LEQUAL)
         gl.glEnable(gl.GL_BLEND)
         gl.glBlendFunc(gl.GL_SRC_ALPHA, gl.GL_ONE_MINUS_SRC_ALPHA)
-        has_bars = (x, y, viewport_width, viewport_height) != (0, 0, width, height)
-        clear_color = bar_color if has_bars and bar_color is not None else background
+        
         gl.glDisable(gl.GL_SCISSOR_TEST)
         gl.glViewport(0, 0, width, height)
         gl.glClearColor(*to_rgba(clear_color))
         gl.glClear(gl.GL_COLOR_BUFFER_BIT | gl.GL_DEPTH_BUFFER_BIT)  # type: ignore
-
         if has_bars:
             gl.glEnable(gl.GL_SCISSOR_TEST)
             gl.glScissor(x, y, viewport_width, viewport_height)
             gl.glClearColor(*to_rgba(background))
             gl.glClear(gl.GL_COLOR_BUFFER_BIT | gl.GL_DEPTH_BUFFER_BIT)  # type: ignore
             gl.glDisable(gl.GL_SCISSOR_TEST)
-
         gl.glViewport(x, y, viewport_width, viewport_height)
+        
         projection_view = camera.projection_matrix(
             viewport_width / viewport_height
         ) @ camera.view_matrix
@@ -152,8 +153,10 @@ class Renderer:
 
         with shader:
             shader.set_uniform_matrix("mvp", projection_view @ item.model)
+            
             if material.kind != "vertex_color":
                 shader.set_uniform("color", material.color)
+            
             if draws_points and material.point_size != DEFAULT_POINT_SIZE:
                 gl.glPointSize(material.point_size)
             if draws_lines and material.line_width != DEFAULT_LINE_WIDTH:
